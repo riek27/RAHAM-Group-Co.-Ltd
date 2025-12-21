@@ -871,3 +871,186 @@ if (!("classList" in document.documentElement)) {
         }
     });
 }
+
+// Add this to the existing initReadMoreButtons() function in script.js
+// Replace the existing job card section with this corrected version
+
+// ====================
+// READ MORE BUTTONS FUNCTIONALITY (UPDATED)
+// ====================
+
+function initReadMoreButtons() {
+    // Service Read More buttons
+    document.querySelectorAll('.service-item .read-more-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const details = this.parentElement.querySelector('.service-details');
+            const isActive = details.classList.contains('active');
+            
+            // Close all other service details in the same category
+            const category = this.closest('.service-category');
+            if (category) {
+                category.querySelectorAll('.service-details.active').forEach(otherDetails => {
+                    if (otherDetails !== details) {
+                        otherDetails.classList.remove('active');
+                        otherDetails.previousElementSibling.textContent = otherDetails.previousElementSibling.textContent.replace('Less', 'More');
+                    }
+                });
+                category.querySelectorAll('.read-more-btn.active').forEach(otherButton => {
+                    if (otherButton !== this) {
+                        otherButton.classList.remove('active');
+                        otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+                    }
+                });
+            }
+            
+            // Toggle current
+            details.classList.toggle('active');
+            this.classList.toggle('active');
+            
+            if (details.classList.contains('active')) {
+                this.innerHTML = '<i class="fas fa-chevron-up"></i> Read Less';
+                smoothScrollToElement(details);
+            } else {
+                this.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+            }
+        });
+    });
+    
+    // Project Read More buttons
+    document.querySelectorAll('.project-card .read-more-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const details = this.parentElement.querySelector('.project-details');
+            const isActive = details.classList.contains('active');
+            
+            // Close all other project details in the same tab
+            const tab = this.closest('.tab-content');
+            if (tab) {
+                tab.querySelectorAll('.project-details.active').forEach(otherDetails => {
+                    if (otherDetails !== details) {
+                        otherDetails.classList.remove('active');
+                    }
+                });
+                tab.querySelectorAll('.read-more-btn.active').forEach(otherButton => {
+                    if (otherButton !== this) {
+                        otherButton.classList.remove('active');
+                        otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+                    }
+                });
+            }
+            
+            // Toggle current
+            details.classList.toggle('active');
+            this.classList.toggle('active');
+            
+            if (details.classList.contains('active')) {
+                this.innerHTML = '<i class="fas fa-chevron-up"></i> Read Less';
+                smoothScrollToElement(details);
+            } else {
+                this.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+            }
+        });
+    });
+    
+    // News Read More buttons
+    document.querySelectorAll('.news-card .read-more-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const details = this.parentElement.querySelector('.news-details');
+            const isActive = details.classList.contains('active');
+            
+            // Close all other news details
+            document.querySelectorAll('.news-details.active').forEach(otherDetails => {
+                if (otherDetails !== details) {
+                    otherDetails.classList.remove('active');
+                }
+            });
+            document.querySelectorAll('.news-card .read-more-btn.active').forEach(otherButton => {
+                if (otherButton !== this) {
+                    otherButton.classList.remove('active');
+                    otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+                }
+            });
+            
+            // Toggle current
+            details.classList.toggle('active');
+            this.classList.toggle('active');
+            
+            if (details.classList.contains('active')) {
+                this.innerHTML = '<i class="fas fa-chevron-up"></i> Read Less';
+                smoothScrollToElement(details);
+            } else {
+                this.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+            }
+        });
+    });
+    
+    // Job Read More buttons (CORRECTED FOR CAREERS PAGE)
+    document.querySelectorAll('.job-card .read-more-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Find the job card that contains this button
+            const jobCard = this.closest('.job-card');
+            if (!jobCard) return;
+            
+            // Find the job details within the job card
+            const details = jobCard.querySelector('.job-details');
+            if (!details) return;
+            
+            const isActive = details.classList.contains('active');
+            
+            // Close all other job details
+            document.querySelectorAll('.job-details.active').forEach(otherDetails => {
+                if (otherDetails !== details) {
+                    otherDetails.classList.remove('active');
+                }
+            });
+            document.querySelectorAll('.job-card .read-more-btn.active').forEach(otherButton => {
+                if (otherButton !== this) {
+                    otherButton.classList.remove('active');
+                    otherButton.textContent = 'View Details';
+                }
+            });
+            
+            // Toggle current
+            details.classList.toggle('active');
+            this.classList.toggle('active');
+            
+            if (details.classList.contains('active')) {
+                this.textContent = 'View Less';
+                // Scroll to show the details if they're not fully visible
+                setTimeout(() => {
+                    const detailsRect = details.getBoundingClientRect();
+                    const viewportHeight = window.innerHeight;
+                    
+                    if (detailsRect.bottom > viewportHeight) {
+                        details.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                    }
+                }, 100);
+            } else {
+                this.textContent = 'View Details';
+            }
+        });
+    });
+    
+    // Close job details when clicking outside
+    document.addEventListener('click', function(event) {
+        const isJobButton = event.target.closest('.job-card .read-more-btn');
+        const isInsideJobDetails = event.target.closest('.job-details');
+        
+        if (!isJobButton && !isInsideJobDetails) {
+            document.querySelectorAll('.job-details.active').forEach(details => {
+                details.classList.remove('active');
+            });
+            document.querySelectorAll('.job-card .read-more-btn.active').forEach(button => {
+                button.classList.remove('active');
+                button.textContent = 'View Details';
+            });
+        }
+    });
+}
+
+
