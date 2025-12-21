@@ -13,7 +13,84 @@ document.addEventListener('DOMContentLoaded', function() {
     initFormValidation();
     initScrollEffects();
     initImageLazyLoading();
+    
+    // Add specific handling for Subsidiaries dropdown
+    initSubsidiariesDropdown();
 });
+
+// ====================
+// SUBSIDIARIES DROPDOWN FUNCTIONALITY
+// ====================
+
+function initSubsidiariesDropdown() {
+    const subsidiariesLink = document.querySelector('a[href="subsidiaries.html"]');
+    if (!subsidiariesLink) return;
+    
+    // Find the parent dropdown element
+    const subsidiariesDropdown = subsidiariesLink.closest('.dropdown');
+    if (!subsidiariesDropdown) return;
+    
+    // Remove the active class from the link when on other pages
+    if (!window.location.href.includes('subsidiaries.html')) {
+        subsidiariesLink.classList.remove('active');
+    }
+    
+    // For desktop: prevent default link behavior and show dropdown on hover
+    if (window.innerWidth > 992) {
+        subsidiariesLink.addEventListener('click', function(e) {
+            // Only prevent default if we're not on the subsidiaries page
+            if (!window.location.href.includes('subsidiaries.html')) {
+                e.preventDefault();
+            }
+        });
+        
+        // Make sure dropdown shows on hover
+        subsidiariesDropdown.addEventListener('mouseenter', () => {
+            const menu = subsidiariesDropdown.querySelector('.dropdown-menu');
+            if (menu) {
+                menu.style.opacity = '1';
+                menu.style.visibility = 'visible';
+                menu.style.transform = 'translateY(0)';
+            }
+        });
+        
+        subsidiariesDropdown.addEventListener('mouseleave', () => {
+            const menu = subsidiariesDropdown.querySelector('.dropdown-menu');
+            if (menu) {
+                menu.style.opacity = '0';
+                menu.style.visibility = 'hidden';
+                menu.style.transform = 'translateY(10px)';
+            }
+        });
+    } 
+    // For mobile: prevent default and toggle dropdown
+    else {
+        subsidiariesLink.addEventListener('click', function(e) {
+            // Only prevent default if we're not on the subsidiaries page
+            if (!window.location.href.includes('subsidiaries.html')) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Toggle the dropdown
+                subsidiariesDropdown.classList.toggle('active');
+                
+                // Close other dropdowns
+                document.querySelectorAll('.dropdown.active').forEach(otherDropdown => {
+                    if (otherDropdown !== subsidiariesDropdown) {
+                        otherDropdown.classList.remove('active');
+                    }
+                });
+            }
+        });
+    }
+    
+    // Close dropdown when clicking outside (for mobile)
+    document.addEventListener('click', function(event) {
+        if (!subsidiariesDropdown.contains(event.target)) {
+            subsidiariesDropdown.classList.remove('active');
+        }
+    });
+}
 
 // ====================
 // MOBILE MENU FUNCTIONALITY
@@ -44,11 +121,14 @@ function initMobileMenu() {
     
     // Close mobile menu when clicking on a link
     document.querySelectorAll('.nav-list a').forEach(link => {
-        link.addEventListener('click', () => {
-            mobileToggle.classList.remove('active');
-            navList.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
+        // Skip subsidiaries link since it has special handling
+        if (!link.href.includes('subsidiaries.html')) {
+            link.addEventListener('click', () => {
+                mobileToggle.classList.remove('active');
+                navList.classList.remove('active');
+                document.body.classList.remove('menu-open');
+            });
+        }
     });
     
     // Handle window resize
@@ -82,6 +162,11 @@ function initDropdowns() {
         const menu = dropdown.querySelector('.dropdown-menu');
         
         if (!toggle || !menu) return;
+        
+        // Skip subsidiaries dropdown as it has special handling
+        if (toggle.getAttribute('href') === 'subsidiaries.html') {
+            return;
+        }
         
         // Desktop: hover to show
         if (window.innerWidth > 992) {
