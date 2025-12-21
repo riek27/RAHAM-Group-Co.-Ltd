@@ -335,6 +335,14 @@ function initScrollIndicator() {
         });
     }
 }
-
 // Add this to the initialization section in script.js
 initScrollIndicator();
+
+
+const toggle = document.querySelector('.mobile-toggle');
+const nav = document.querySelector('.nav-list');
+
+toggle.addEventListener('click', () => {
+    toggle.classList.toggle('active');
+    nav.classList.toggle('active');
+});
