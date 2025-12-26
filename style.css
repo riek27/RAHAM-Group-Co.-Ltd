@@ -505,16 +505,18 @@ img {
     border-color: var(--primary);
 }
 
-.subsidiary-logo {
-    height: 140px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 25px;
-}
-
 .subsidiary-logo img {
     max-height: 100%;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+
+.subsidiary-logo img {
+    max-height: 180px;
     object-fit: contain;
 }
 
