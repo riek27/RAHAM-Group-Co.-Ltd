@@ -505,17 +505,18 @@ img {
     border-color: var(--primary);
 }
 
-.subsidiary-logo img {
-    height: 200px !important;
-}
-
-
 .subsidiary-logo {
-    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
+.subsidiary-logo img {
+    height: 220px !important;
+    width: auto !important;
+    display: block;
+}
+
 
 .subsidiary-card h3 {
     font-size: 1.5rem;
