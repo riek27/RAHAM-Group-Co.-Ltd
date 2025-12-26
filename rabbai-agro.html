@@ -211,7 +211,7 @@
                         <i class="fas fa-envelope"></i>
                         <div>
                             <strong>Email</strong>
-                            <p>agro@rahamgroupcoltd.com</p>
+                            <p>info-rabbai@rahamgroupcoltd.com</p>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -237,33 +237,37 @@
                     </div>
                 </div>
                 <div class="contact-form">
-                    <h3>Agricultural Partnership Inquiry</h3>
-                    <form class="subsidiary-form">
-                        <div class="form-group">
-                            <input type="text" placeholder="Name/Organization" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="email" placeholder="Email Address" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" placeholder="Phone Number" required>
-                        </div>
-                        <div class="form-group">
-                            <select required>
-                                <option value="">Area of Interest</option>
-                                <option value="crops">Crop Production</option>
-                                <option value="livestock">Livestock</option>
-                                <option value="processing">Agro-Processing</option>
-                                <option value="partnership">Partnership</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <textarea placeholder="Your Message or Inquiry" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Submit Inquiry</button>
-                    </form>
-                </div>
+    <h3>Agricultural Partnership Inquiry</h3>
+    <form name="agriculture-partnership-form" method="POST" data-netlify="true" class="subsidiary-form">
+        <!-- Hidden input for Netlify form handling -->
+        <input type="hidden" name="form-name" value="agriculture-partnership-form">
+
+        <div class="form-group">
+            <input type="text" name="organization_name" placeholder="Name/Organization" required>
+        </div>
+        <div class="form-group">
+            <input type="email" name="email" placeholder="Email Address" required>
+        </div>
+        <div class="form-group">
+            <input type="text" name="phone" placeholder="Phone Number" required>
+        </div>
+        <div class="form-group">
+            <select name="area_of_interest" required>
+                <option value="">Area of Interest</option>
+                <option value="crops">Crop Production</option>
+                <option value="livestock">Livestock</option>
+                <option value="processing">Agro-Processing</option>
+                <option value="partnership">Partnership</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <textarea name="message" placeholder="Your Message or Inquiry" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Inquiry</button>
+    </form>
+</div>
+
             </div>
         </div>
     </section>
