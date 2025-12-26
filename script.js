@@ -1,4 +1,4 @@
-// Lumora Group Website - Main JavaScript File
+// RAHAM Group Co. Ltd Website - Main JavaScript File
 
 // DOM Ready Function
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,84 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initFormValidation();
     initScrollEffects();
     initImageLazyLoading();
-    
-    // Add specific handling for Subsidiaries dropdown
-    initSubsidiariesDropdown();
 });
-
-// ====================
-// SUBSIDIARIES DROPDOWN FUNCTIONALITY
-// ====================
-
-function initSubsidiariesDropdown() {
-    const subsidiariesLink = document.querySelector('a[href="subsidiaries.html"]');
-    if (!subsidiariesLink) return;
-    
-    // Find the parent dropdown element
-    const subsidiariesDropdown = subsidiariesLink.closest('.dropdown');
-    if (!subsidiariesDropdown) return;
-    
-    // Remove the active class from the link when on other pages
-    if (!window.location.href.includes('subsidiaries.html')) {
-        subsidiariesLink.classList.remove('active');
-    }
-    
-    // For desktop: prevent default link behavior and show dropdown on hover
-    if (window.innerWidth > 992) {
-        subsidiariesLink.addEventListener('click', function(e) {
-            // Only prevent default if we're not on the subsidiaries page
-            if (!window.location.href.includes('subsidiaries.html')) {
-                e.preventDefault();
-            }
-        });
-        
-        // Make sure dropdown shows on hover
-        subsidiariesDropdown.addEventListener('mouseenter', () => {
-            const menu = subsidiariesDropdown.querySelector('.dropdown-menu');
-            if (menu) {
-                menu.style.opacity = '1';
-                menu.style.visibility = 'visible';
-                menu.style.transform = 'translateY(0)';
-            }
-        });
-        
-        subsidiariesDropdown.addEventListener('mouseleave', () => {
-            const menu = subsidiariesDropdown.querySelector('.dropdown-menu');
-            if (menu) {
-                menu.style.opacity = '0';
-                menu.style.visibility = 'hidden';
-                menu.style.transform = 'translateY(10px)';
-            }
-        });
-    } 
-    // For mobile: prevent default and toggle dropdown
-    else {
-        subsidiariesLink.addEventListener('click', function(e) {
-            // Only prevent default if we're not on the subsidiaries page
-            if (!window.location.href.includes('subsidiaries.html')) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Toggle the dropdown
-                subsidiariesDropdown.classList.toggle('active');
-                
-                // Close other dropdowns
-                document.querySelectorAll('.dropdown.active').forEach(otherDropdown => {
-                    if (otherDropdown !== subsidiariesDropdown) {
-                        otherDropdown.classList.remove('active');
-                    }
-                });
-            }
-        });
-    }
-    
-    // Close dropdown when clicking outside (for mobile)
-    document.addEventListener('click', function(event) {
-        if (!subsidiariesDropdown.contains(event.target)) {
-            subsidiariesDropdown.classList.remove('active');
-        }
-    });
-}
 
 // ====================
 // MOBILE MENU FUNCTIONALITY
@@ -104,7 +27,8 @@ function initMobileMenu() {
     if (!mobileToggle || !navList) return;
     
     // Toggle mobile menu
-    mobileToggle.addEventListener('click', function() {
+    mobileToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
         this.classList.toggle('active');
         navList.classList.toggle('active');
         document.body.classList.toggle('menu-open');
@@ -119,35 +43,32 @@ function initMobileMenu() {
         }
     });
     
-    // Close mobile menu when clicking on a link
-    document.querySelectorAll('.nav-list a').forEach(link => {
-        // Skip subsidiaries link since it has special handling
-        if (!link.href.includes('subsidiaries.html')) {
-            link.addEventListener('click', () => {
-                mobileToggle.classList.remove('active');
-                navList.classList.remove('active');
-                document.body.classList.remove('menu-open');
-            });
-        }
+    // Close mobile menu when clicking on a link (except dropdown toggles)
+    document.querySelectorAll('.nav-list a:not(.dropdown-toggle)').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileToggle.classList.remove('active');
+            navList.classList.remove('active');
+            document.body.classList.remove('menu-open');
+        });
     });
     
     // Handle window resize
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', debounce(function() {
         if (window.innerWidth > 992) {
             mobileToggle.classList.remove('active');
             navList.classList.remove('active');
             document.body.classList.remove('menu-open');
         }
-    });
+    }, 250));
     
     // Add scroll effect to header
-    window.addEventListener('scroll', function() {
+    window.addEventListener('scroll', throttle(function() {
         if (window.scrollY > 100) {
             header.classList.add('scrolled');
         } else {
             header.classList.remove('scrolled');
         }
-    });
+    }, 100));
 }
 
 // ====================
@@ -163,52 +84,62 @@ function initDropdowns() {
         
         if (!toggle || !menu) return;
         
-        // Skip subsidiaries dropdown as it has special handling
-        if (toggle.getAttribute('href') === 'subsidiaries.html') {
-            return;
-        }
+        // Check if this is a parent dropdown (has submenu)
+        const hasSubmenu = dropdown.querySelector('.dropdown-menu') !== null;
         
-        // Desktop: hover to show
-        if (window.innerWidth > 992) {
-            dropdown.addEventListener('mouseenter', () => {
-                menu.style.opacity = '1';
-                menu.style.visibility = 'visible';
-                menu.style.transform = 'translateY(0)';
+        if (hasSubmenu) {
+            // For dropdowns with submenus, prevent default on mobile
+            toggle.addEventListener('click', function(e) {
+                if (window.innerWidth <= 992) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Close other dropdowns
+                    document.querySelectorAll('.dropdown.active').forEach(otherDropdown => {
+                        if (otherDropdown !== dropdown) {
+                            otherDropdown.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    dropdown.classList.toggle('active');
+                }
+                // On desktop, allow normal link behavior
             });
             
-            dropdown.addEventListener('mouseleave', () => {
-                menu.style.opacity = '0';
-                menu.style.visibility = 'hidden';
-                menu.style.transform = 'translateY(10px)';
-            });
-        } 
-        // Mobile: click to toggle
-        else {
-            toggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Close other dropdowns
-                document.querySelectorAll('.dropdown.active').forEach(otherDropdown => {
-                    if (otherDropdown !== dropdown) {
-                        otherDropdown.classList.remove('active');
-                    }
+            // Desktop hover behavior
+            if (window.innerWidth > 992) {
+                dropdown.addEventListener('mouseenter', () => {
+                    dropdown.classList.add('active');
+                    menu.style.opacity = '1';
+                    menu.style.visibility = 'visible';
+                    menu.style.transform = 'translateY(0)';
                 });
                 
-                dropdown.classList.toggle('active');
-            });
+                dropdown.addEventListener('mouseleave', () => {
+                    dropdown.classList.remove('active');
+                    menu.style.opacity = '0';
+                    menu.style.visibility = 'hidden';
+                    menu.style.transform = 'translateY(10px)';
+                });
+            }
         }
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
-            if (!dropdown.contains(event.target)) {
+            if (!dropdown.contains(event.target) && !event.target.closest('.dropdown')) {
                 dropdown.classList.remove('active');
+                if (menu) {
+                    menu.style.opacity = '0';
+                    menu.style.visibility = 'hidden';
+                    menu.style.transform = 'translateY(10px)';
+                }
             }
         });
     });
     
     // Update dropdown behavior on window resize
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', debounce(function() {
         const dropdowns = document.querySelectorAll('.dropdown');
         
         dropdowns.forEach(dropdown => {
@@ -216,12 +147,24 @@ function initDropdowns() {
             if (!menu) return;
             
             if (window.innerWidth > 992) {
+                // Reset mobile styles
                 menu.style.opacity = '';
                 menu.style.visibility = '';
                 menu.style.transform = '';
                 dropdown.classList.remove('active');
             }
         });
+    }, 250));
+    
+    // Close all dropdowns when clicking anywhere on document (mobile only)
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 992) {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            }
+        }
     });
 }
 
@@ -232,8 +175,12 @@ function initDropdowns() {
 function initReadMoreButtons() {
     // Service Read More buttons
     document.querySelectorAll('.service-item .read-more-btn').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             const details = this.parentElement.querySelector('.service-details');
+            
+            if (!details) return;
+            
             const isActive = details.classList.contains('active');
             
             // Close all other service details in the same category
@@ -242,13 +189,11 @@ function initReadMoreButtons() {
                 category.querySelectorAll('.service-details.active').forEach(otherDetails => {
                     if (otherDetails !== details) {
                         otherDetails.classList.remove('active');
-                        otherDetails.previousElementSibling.textContent = otherDetails.previousElementSibling.textContent.replace('Less', 'More');
-                    }
-                });
-                category.querySelectorAll('.read-more-btn.active').forEach(otherButton => {
-                    if (otherButton !== this) {
-                        otherButton.classList.remove('active');
-                        otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+                        const otherBtn = otherDetails.previousElementSibling?.querySelector('.read-more-btn');
+                        if (otherBtn) {
+                            otherBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+                            otherBtn.classList.remove('active');
+                        }
                     }
                 });
             }
@@ -268,8 +213,12 @@ function initReadMoreButtons() {
     
     // Project Read More buttons
     document.querySelectorAll('.project-card .read-more-btn').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             const details = this.parentElement.querySelector('.project-details');
+            
+            if (!details) return;
+            
             const isActive = details.classList.contains('active');
             
             // Close all other project details in the same tab
@@ -278,12 +227,11 @@ function initReadMoreButtons() {
                 tab.querySelectorAll('.project-details.active').forEach(otherDetails => {
                     if (otherDetails !== details) {
                         otherDetails.classList.remove('active');
-                    }
-                });
-                tab.querySelectorAll('.read-more-btn.active').forEach(otherButton => {
-                    if (otherButton !== this) {
-                        otherButton.classList.remove('active');
-                        otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+                        const otherBtn = otherDetails.previousElementSibling?.querySelector('.read-more-btn');
+                        if (otherBtn) {
+                            otherBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+                            otherBtn.classList.remove('active');
+                        }
                     }
                 });
             }
@@ -303,22 +251,11 @@ function initReadMoreButtons() {
     
     // News Read More buttons
     document.querySelectorAll('.news-card .read-more-btn').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             const details = this.parentElement.querySelector('.news-details');
-            const isActive = details.classList.contains('active');
             
-            // Close all other news details
-            document.querySelectorAll('.news-details.active').forEach(otherDetails => {
-                if (otherDetails !== details) {
-                    otherDetails.classList.remove('active');
-                }
-            });
-            document.querySelectorAll('.news-card .read-more-btn.active').forEach(otherButton => {
-                if (otherButton !== this) {
-                    otherButton.classList.remove('active');
-                    otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
-                }
-            });
+            if (!details) return;
             
             // Toggle current
             details.classList.toggle('active');
@@ -335,20 +272,22 @@ function initReadMoreButtons() {
     
     // Job Read More buttons
     document.querySelectorAll('.job-card .read-more-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const details = this.parentElement.querySelector('.job-details');
-            const isActive = details.classList.contains('active');
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const jobCard = this.closest('.job-card');
+            const details = jobCard?.querySelector('.job-details');
+            
+            if (!details) return;
             
             // Close all other job details
-            document.querySelectorAll('.job-details.active').forEach(otherDetails => {
+            document.querySelectorAll('.job-card .job-details.active').forEach(otherDetails => {
                 if (otherDetails !== details) {
                     otherDetails.classList.remove('active');
-                }
-            });
-            document.querySelectorAll('.job-card .read-more-btn.active').forEach(otherButton => {
-                if (otherButton !== this) {
-                    otherButton.classList.remove('active');
-                    otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> View Details';
+                    const otherBtn = otherDetails.closest('.job-card')?.querySelector('.read-more-btn');
+                    if (otherBtn) {
+                        otherBtn.textContent = 'View Details';
+                        otherBtn.classList.remove('active');
+                    }
                 }
             });
             
@@ -357,10 +296,17 @@ function initReadMoreButtons() {
             this.classList.toggle('active');
             
             if (details.classList.contains('active')) {
-                this.innerHTML = '<i class="fas fa-chevron-up"></i> View Less';
-                smoothScrollToElement(details);
+                this.textContent = 'View Less';
+                // Scroll to show the details
+                setTimeout(() => {
+                    details.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'nearest',
+                        inline: 'nearest'
+                    });
+                }, 100);
             } else {
-                this.innerHTML = '<i class="fas fa-chevron-down"></i> View Details';
+                this.textContent = 'View Details';
             }
         });
     });
@@ -379,6 +325,7 @@ function initTabs() {
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
             const tabId = this.getAttribute('data-tab');
+            if (!tabId) return;
             
             // Remove active class from all buttons and contents
             tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -386,12 +333,15 @@ function initTabs() {
             
             // Add active class to clicked button and corresponding content
             this.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            
-            // Trigger animation for new content
-            setTimeout(() => {
-                animateTabContent(document.getElementById(tabId));
-            }, 50);
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                
+                // Trigger animation for new content
+                setTimeout(() => {
+                    animateTabContent(targetContent);
+                }, 50);
+            }
         });
     });
 }
@@ -428,10 +378,10 @@ function initFilters() {
                 
                 if (filter === 'all' || category === filter) {
                     card.style.display = 'block';
-                    setTimeout(() => {
+                    requestAnimationFrame(() => {
                         card.style.opacity = '1';
                         card.style.transform = 'translateY(0)';
-                    }, 100);
+                    });
                 } else {
                     card.style.opacity = '0';
                     card.style.transform = 'translateY(20px)';
@@ -454,13 +404,15 @@ function initFAQ() {
     faqQuestions.forEach(question => {
         question.addEventListener('click', function() {
             const answer = this.nextElementSibling;
+            if (!answer) return;
+            
             const isActive = answer.classList.contains('active');
             
             // Close all other FAQs
-            document.querySelectorAll('.faq-answer').forEach(item => {
+            document.querySelectorAll('.faq-answer.active').forEach(item => {
                 item.classList.remove('active');
             });
-            document.querySelectorAll('.faq-question').forEach(item => {
+            document.querySelectorAll('.faq-question.active').forEach(item => {
                 item.classList.remove('active');
             });
             
@@ -468,6 +420,14 @@ function initFAQ() {
             if (!isActive) {
                 answer.classList.add('active');
                 this.classList.add('active');
+                
+                // Smooth scroll to the expanded FAQ
+                setTimeout(() => {
+                    answer.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'nearest' 
+                    });
+                }, 100);
             }
         });
     });
@@ -479,24 +439,31 @@ function initFAQ() {
 
 function initAnimations() {
     // Intersection Observer for scroll animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
-                observer.unobserve(entry.target);
-            }
+    if ('IntersectionObserver' in window) {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        // Observe elements with animation classes
+        document.querySelectorAll('.service-card, .project-card, .news-card, .job-card, .feature, .sector-card, .subsidiary-card, .leader-card, .approach-item, .culture-item, .benefit, .value-card, .subsidiary-contact-card').forEach(el => {
+            observer.observe(el);
         });
-    }, observerOptions);
-    
-    // Observe elements with animation classes
-    document.querySelectorAll('.service-card, .project-card, .news-card, .job-card, .feature, .sector-card, .subsidiary-card, .leader-card, .approach-item, .culture-item, .benefit, .value-card, .subsidiary-contact-card').forEach(el => {
-        observer.observe(el);
-    });
+    } else {
+        // Fallback for older browsers
+        document.querySelectorAll('.service-card, .project-card, .news-card, .job-card, .feature, .sector-card, .subsidiary-card, .leader-card, .approach-item, .culture-item, .benefit, .value-card, .subsidiary-contact-card').forEach(el => {
+            el.classList.add('animate-in');
+        });
+    }
     
     // Add animation styles dynamically
     const style = document.createElement('style');
@@ -532,7 +499,7 @@ function initAnimations() {
         
         /* Mobile menu animation */
         .nav-list {
-            transition: left 0.3s ease;
+            transition: transform 0.3s ease;
         }
         
         .mobile-toggle span {
@@ -553,6 +520,11 @@ function initAnimations() {
         html {
             scroll-behavior: smooth;
         }
+        
+        /* Prevent scroll when menu is open */
+        body.menu-open {
+            overflow: hidden;
+        }
     `;
     document.head.appendChild(style);
 }
@@ -571,14 +543,18 @@ function initFormValidation() {
             let isValid = true;
             const requiredFields = form.querySelectorAll('[required]');
             
+            // Clear previous errors
+            form.querySelectorAll('.field-error').forEach(error => error.remove());
+            form.querySelectorAll('input, textarea').forEach(field => {
+                field.style.borderColor = '';
+            });
+            
             // Basic validation
             requiredFields.forEach(field => {
                 if (!field.value.trim()) {
                     isValid = false;
                     showFieldError(field, 'This field is required');
                 } else {
-                    clearFieldError(field);
-                    
                     // Email validation
                     if (field.type === 'email') {
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -597,7 +573,13 @@ function initFormValidation() {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
                 submitBtn.disabled = true;
                 
-                // Simulate form submission (replace with actual AJAX call)
+                // Remove any existing success message
+                const existingSuccess = form.parentNode.querySelector('.form-success');
+                if (existingSuccess) {
+                    existingSuccess.remove();
+                }
+                
+                // Simulate form submission
                 setTimeout(() => {
                     // Show success message
                     const successMessage = document.createElement('div');
@@ -617,7 +599,9 @@ function initFormValidation() {
                     
                     // Remove success message after 5 seconds
                     setTimeout(() => {
-                        successMessage.remove();
+                        if (successMessage.parentNode) {
+                            successMessage.remove();
+                        }
                     }, 5000);
                     
                     // Scroll to success message
@@ -650,9 +634,7 @@ function showFieldError(field, message) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'field-error';
     errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-    errorDiv.style.color = '#dc3545';
-    errorDiv.style.fontSize = '0.875rem';
-    errorDiv.style.marginTop = '5px';
+    errorDiv.style.cssText = 'color: #dc3545; font-size: 0.875rem; margin-top: 5px;';
     
     field.style.borderColor = '#dc3545';
     field.parentNode.appendChild(errorDiv);
@@ -690,20 +672,25 @@ function initScrollEffects() {
     const scrollTopBtn = document.createElement('button');
     scrollTopBtn.className = 'scroll-top';
     scrollTopBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
-    scrollTopBtn.style.position = 'fixed';
-    scrollTopBtn.style.bottom = '30px';
-    scrollTopBtn.style.right = '30px';
-    scrollTopBtn.style.width = '50px';
-    scrollTopBtn.style.height = '50px';
-    scrollTopBtn.style.backgroundColor = 'var(--primary)';
-    scrollTopBtn.style.color = 'var(--white)';
-    scrollTopBtn.style.border = 'none';
-    scrollTopBtn.style.borderRadius = '50%';
-    scrollTopBtn.style.cursor = 'pointer';
-    scrollTopBtn.style.display = 'none';
-    scrollTopBtn.style.zIndex = '1000';
-    scrollTopBtn.style.boxShadow = 'var(--shadow-lg)';
-    scrollTopBtn.style.transition = 'all 0.3s ease';
+    scrollTopBtn.setAttribute('aria-label', 'Scroll to top');
+    scrollTopBtn.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        background-color: var(--primary);
+        color: var(--white);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: none;
+        z-index: 1000;
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+    `;
     
     document.body.appendChild(scrollTopBtn);
     
@@ -714,13 +701,13 @@ function initScrollEffects() {
         });
     });
     
-    window.addEventListener('scroll', () => {
+    window.addEventListener('scroll', throttle(() => {
         if (window.scrollY > 500) {
             scrollTopBtn.style.display = 'block';
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 scrollTopBtn.style.opacity = '1';
                 scrollTopBtn.style.transform = 'translateY(0)';
-            }, 10);
+            });
         } else {
             scrollTopBtn.style.opacity = '0';
             scrollTopBtn.style.transform = 'translateY(20px)';
@@ -728,7 +715,7 @@ function initScrollEffects() {
                 scrollTopBtn.style.display = 'none';
             }, 300);
         }
-    });
+    }, 100));
     
     // Add hover effect to scroll button
     scrollTopBtn.addEventListener('mouseenter', () => {
@@ -738,7 +725,9 @@ function initScrollEffects() {
     
     scrollTopBtn.addEventListener('mouseleave', () => {
         scrollTopBtn.style.backgroundColor = 'var(--primary)';
-        scrollTopBtn.style.transform = 'translateY(0)';
+        if (window.scrollY > 500) {
+            scrollTopBtn.style.transform = 'translateY(0)';
+        }
     });
 }
 
@@ -763,10 +752,19 @@ function initImageLazyLoading() {
                     imageObserver.unobserve(img);
                 }
             });
+        }, {
+            rootMargin: '50px 0px',
+            threshold: 0.1
         });
         
         document.querySelectorAll('img[data-src]').forEach(img => {
             imageObserver.observe(img);
+        });
+    } else {
+        // Fallback for older browsers
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            img.src = img.getAttribute('data-src');
+            img.classList.add('loaded');
         });
     }
 }
@@ -776,7 +774,10 @@ function initImageLazyLoading() {
 // ====================
 
 function smoothScrollToElement(element) {
-    const headerHeight = document.querySelector('.header').offsetHeight;
+    const header = document.querySelector('.header');
+    if (!header) return;
+    
+    const headerHeight = header.offsetHeight;
     const elementPosition = element.getBoundingClientRect().top;
     const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 20;
     
@@ -784,6 +785,33 @@ function smoothScrollToElement(element) {
         top: offsetPosition,
         behavior: 'smooth'
     });
+}
+
+// Debounce function for resize events
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Throttle function for scroll events
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
 }
 
 // ====================
@@ -808,15 +836,6 @@ window.addEventListener('load', function() {
 
 window.addEventListener('error', function(e) {
     console.error('Script error:', e.message, 'at', e.filename, ':', e.lineno);
-    
-    // Fallback for older browsers
-    if (!('IntersectionObserver' in window)) {
-        console.log('IntersectionObserver not supported, using fallback animations');
-        document.querySelectorAll('.service-card, .project-card, .news-card, .job-card, .feature, .sector-card, .subsidiary-card, .leader-card, .approach-item, .culture-item, .benefit, .value-card, .subsidiary-contact-card').forEach(el => {
-            el.style.opacity = '1';
-            el.style.transform = 'translateY(0)';
-        });
-    }
 });
 
 // ====================
@@ -871,186 +890,3 @@ if (!("classList" in document.documentElement)) {
         }
     });
 }
-
-// Add this to the existing initReadMoreButtons() function in script.js
-// Replace the existing job card section with this corrected version
-
-// ====================
-// READ MORE BUTTONS FUNCTIONALITY (UPDATED)
-// ====================
-
-function initReadMoreButtons() {
-    // Service Read More buttons
-    document.querySelectorAll('.service-item .read-more-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const details = this.parentElement.querySelector('.service-details');
-            const isActive = details.classList.contains('active');
-            
-            // Close all other service details in the same category
-            const category = this.closest('.service-category');
-            if (category) {
-                category.querySelectorAll('.service-details.active').forEach(otherDetails => {
-                    if (otherDetails !== details) {
-                        otherDetails.classList.remove('active');
-                        otherDetails.previousElementSibling.textContent = otherDetails.previousElementSibling.textContent.replace('Less', 'More');
-                    }
-                });
-                category.querySelectorAll('.read-more-btn.active').forEach(otherButton => {
-                    if (otherButton !== this) {
-                        otherButton.classList.remove('active');
-                        otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
-                    }
-                });
-            }
-            
-            // Toggle current
-            details.classList.toggle('active');
-            this.classList.toggle('active');
-            
-            if (details.classList.contains('active')) {
-                this.innerHTML = '<i class="fas fa-chevron-up"></i> Read Less';
-                smoothScrollToElement(details);
-            } else {
-                this.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
-            }
-        });
-    });
-    
-    // Project Read More buttons
-    document.querySelectorAll('.project-card .read-more-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const details = this.parentElement.querySelector('.project-details');
-            const isActive = details.classList.contains('active');
-            
-            // Close all other project details in the same tab
-            const tab = this.closest('.tab-content');
-            if (tab) {
-                tab.querySelectorAll('.project-details.active').forEach(otherDetails => {
-                    if (otherDetails !== details) {
-                        otherDetails.classList.remove('active');
-                    }
-                });
-                tab.querySelectorAll('.read-more-btn.active').forEach(otherButton => {
-                    if (otherButton !== this) {
-                        otherButton.classList.remove('active');
-                        otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
-                    }
-                });
-            }
-            
-            // Toggle current
-            details.classList.toggle('active');
-            this.classList.toggle('active');
-            
-            if (details.classList.contains('active')) {
-                this.innerHTML = '<i class="fas fa-chevron-up"></i> Read Less';
-                smoothScrollToElement(details);
-            } else {
-                this.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
-            }
-        });
-    });
-    
-    // News Read More buttons
-    document.querySelectorAll('.news-card .read-more-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const details = this.parentElement.querySelector('.news-details');
-            const isActive = details.classList.contains('active');
-            
-            // Close all other news details
-            document.querySelectorAll('.news-details.active').forEach(otherDetails => {
-                if (otherDetails !== details) {
-                    otherDetails.classList.remove('active');
-                }
-            });
-            document.querySelectorAll('.news-card .read-more-btn.active').forEach(otherButton => {
-                if (otherButton !== this) {
-                    otherButton.classList.remove('active');
-                    otherButton.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
-                }
-            });
-            
-            // Toggle current
-            details.classList.toggle('active');
-            this.classList.toggle('active');
-            
-            if (details.classList.contains('active')) {
-                this.innerHTML = '<i class="fas fa-chevron-up"></i> Read Less';
-                smoothScrollToElement(details);
-            } else {
-                this.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
-            }
-        });
-    });
-    
-    // Job Read More buttons (CORRECTED FOR CAREERS PAGE)
-    document.querySelectorAll('.job-card .read-more-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Find the job card that contains this button
-            const jobCard = this.closest('.job-card');
-            if (!jobCard) return;
-            
-            // Find the job details within the job card
-            const details = jobCard.querySelector('.job-details');
-            if (!details) return;
-            
-            const isActive = details.classList.contains('active');
-            
-            // Close all other job details
-            document.querySelectorAll('.job-details.active').forEach(otherDetails => {
-                if (otherDetails !== details) {
-                    otherDetails.classList.remove('active');
-                }
-            });
-            document.querySelectorAll('.job-card .read-more-btn.active').forEach(otherButton => {
-                if (otherButton !== this) {
-                    otherButton.classList.remove('active');
-                    otherButton.textContent = 'View Details';
-                }
-            });
-            
-            // Toggle current
-            details.classList.toggle('active');
-            this.classList.toggle('active');
-            
-            if (details.classList.contains('active')) {
-                this.textContent = 'View Less';
-                // Scroll to show the details if they're not fully visible
-                setTimeout(() => {
-                    const detailsRect = details.getBoundingClientRect();
-                    const viewportHeight = window.innerHeight;
-                    
-                    if (detailsRect.bottom > viewportHeight) {
-                        details.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'center' 
-                        });
-                    }
-                }, 100);
-            } else {
-                this.textContent = 'View Details';
-            }
-        });
-    });
-    
-    // Close job details when clicking outside
-    document.addEventListener('click', function(event) {
-        const isJobButton = event.target.closest('.job-card .read-more-btn');
-        const isInsideJobDetails = event.target.closest('.job-details');
-        
-        if (!isJobButton && !isInsideJobDetails) {
-            document.querySelectorAll('.job-details.active').forEach(details => {
-                details.classList.remove('active');
-            });
-            document.querySelectorAll('.job-card .read-more-btn.active').forEach(button => {
-                button.classList.remove('active');
-                button.textContent = 'View Details';
-            });
-        }
-    });
-}
-
-
