@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initFilters();
     initFAQ();
     initAnimations();
-    initFormValidation();
+    initFormValidation(); // This is the problematic function
     initScrollEffects();
     initImageLazyLoading();
 });
@@ -525,21 +525,98 @@ function initAnimations() {
         body.menu-open {
             overflow: hidden;
         }
+        
+        /* Form validation styles */
+        .field-error {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .field-error i {
+            font-size: 0.875rem;
+        }
+        
+        .form-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .form-success i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #28a745;
+        }
+        
+        .form-success h3 {
+            margin-bottom: 10px;
+        }
+        
+        .form-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .form-error i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #dc3545;
+        }
+        
+        .form-error h3 {
+            margin-bottom: 10px;
+        }
     `;
     document.head.appendChild(style);
 }
 
 // ====================
-// FORM VALIDATION
+// FORM VALIDATION (FIXED FOR NETLIFY)
 // ====================
 
 function initFormValidation() {
     const forms = document.querySelectorAll('.contact-form, .subsidiary-form, .newsletter-form');
     
     forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Real-time validation for immediate feedback
+        const inputs = form.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.hasAttribute('required') && !this.value.trim()) {
+                    showFieldError(this, 'This field is required');
+                } else {
+                    clearFieldError(this);
+                    
+                    // Email validation
+                    if (this.type === 'email' && this.value.trim()) {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(this.value)) {
+                            showFieldError(this, 'Please enter a valid email address');
+                        }
+                    }
+                }
+            });
             
+            input.addEventListener('input', function() {
+                clearFieldError(this);
+            });
+        });
+        
+        // Form submission - only validate and show feedback, don't prevent Netlify submission
+        form.addEventListener('submit', function(e) {
             let isValid = true;
             const requiredFields = form.querySelectorAll('[required]');
             
@@ -566,65 +643,48 @@ function initFormValidation() {
                 }
             });
             
-            if (isValid) {
-                // Show loading state
+            if (!isValid) {
+                // Prevent form submission only if validation fails
+                e.preventDefault();
+                
+                // Show error message at top of form
+                showFormError(form, 'Please fill in all required fields correctly.');
+                
+                // Scroll to first error
+                const firstError = form.querySelector('.field-error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                // If form is valid, Netlify will handle the submission
+                // Show loading state but don't prevent form submission
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
                 submitBtn.disabled = true;
                 
-                // Remove any existing success message
-                const existingSuccess = form.parentNode.querySelector('.form-success');
-                if (existingSuccess) {
-                    existingSuccess.remove();
+                // Remove any existing messages
+                const existingMessage = form.parentNode.querySelector('.form-success, .form-error');
+                if (existingMessage) {
+                    existingMessage.remove();
                 }
                 
-                // Simulate form submission
+                // Let Netlify handle the actual form submission
+                // The page will reload/redirect after submission
+                
+                // Re-enable button after 5 seconds (in case submission fails)
                 setTimeout(() => {
-                    // Show success message
-                    const successMessage = document.createElement('div');
-                    successMessage.className = 'form-success active';
-                    successMessage.innerHTML = `
-                        <i class="fas fa-check-circle"></i>
-                        <h3>Message Sent Successfully!</h3>
-                        <p>Thank you for contacting us. We'll get back to you soon.</p>
-                    `;
-                    
-                    form.parentNode.insertBefore(successMessage, form.nextSibling);
-                    form.reset();
-                    
-                    // Reset button
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
-                    
-                    // Remove success message after 5 seconds
-                    setTimeout(() => {
-                        if (successMessage.parentNode) {
-                            successMessage.remove();
-                        }
-                    }, 5000);
-                    
-                    // Scroll to success message
-                    smoothScrollToElement(successMessage);
-                }, 1500);
+                }, 5000);
             }
         });
         
-        // Real-time validation
-        const inputs = form.querySelectorAll('input, textarea, select');
-        inputs.forEach(input => {
-            input.addEventListener('blur', function() {
-                if (this.hasAttribute('required') && !this.value.trim()) {
-                    showFieldError(this, 'This field is required');
-                } else {
-                    clearFieldError(this);
-                }
-            });
-            
-            input.addEventListener('input', function() {
-                clearFieldError(this);
-            });
-        });
+        // Handle Netlify form success redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('form-success')) {
+            showFormSuccess(form, 'Thank you for contacting us. We\'ll get back to you soon.');
+        }
     });
 }
 
@@ -634,7 +694,6 @@ function showFieldError(field, message) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'field-error';
     errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-    errorDiv.style.cssText = 'color: #dc3545; font-size: 0.875rem; margin-top: 5px;';
     
     field.style.borderColor = '#dc3545';
     field.parentNode.appendChild(errorDiv);
@@ -646,6 +705,57 @@ function clearFieldError(field) {
         existingError.remove();
     }
     field.style.borderColor = '';
+}
+
+function showFormSuccess(form, message) {
+    const existingMessage = form.parentNode.querySelector('.form-success, .form-error');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    const successMessage = document.createElement('div');
+    successMessage.className = 'form-success';
+    successMessage.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <h3>Message Sent Successfully!</h3>
+        <p>${message}</p>
+    `;
+    
+    form.parentNode.insertBefore(successMessage, form.nextSibling);
+    
+    // Scroll to success message
+    setTimeout(() => {
+        successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+    
+    // Remove after 10 seconds
+    setTimeout(() => {
+        if (successMessage.parentNode) {
+            successMessage.remove();
+        }
+    }, 10000);
+}
+
+function showFormError(form, message) {
+    const existingMessage = form.parentNode.querySelector('.form-success, .form-error');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    const errorMessage = document.createElement('div');
+    errorMessage.className = 'form-error';
+    errorMessage.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>Error Sending Message</h3>
+        <p>${message}</p>
+    `;
+    
+    form.parentNode.insertBefore(errorMessage, form.nextSibling);
+    
+    // Scroll to error message
+    setTimeout(() => {
+        errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
 }
 
 // ====================
