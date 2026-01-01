@@ -6216,3 +6216,31 @@ document.querySelectorAll('.read-more-btn').forEach(button => {
         font-size: 0.85rem;
     }
 }
+
+.topbar{
+    background:#0c2340;
+    color:#fff;
+    font-size:14px;
+    padding:8px 0;
+}
+
+.topbar .container{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.topbar i{
+    color:#f4c430;
+    margin-right:6px;
+}
+
+.topbar-btn{
+    background:#f4c430;
+    color:#0c2340;
+    padding:8px 16px;
+    border-radius:25px;
+    font-weight:600;
+    text-decoration:none;
+}
+
