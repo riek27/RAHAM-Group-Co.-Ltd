@@ -1000,3 +1000,41 @@ if (!("classList" in document.documentElement)) {
         }
     });
 }
+
+
+const form = document.getElementById('general-contact-form');
+const successMessage = document.getElementById('form-success');
+
+form.addEventListener('submit', async function(event) {
+  event.preventDefault();
+
+  // Convert form data to JSON
+  const data = {};
+  new FormData(form).forEach((value, key) => {
+    data[key] = value;
+  });
+
+  try {
+    const response = await fetch(form.action, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', // Important for Formspark
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+      successMessage.style.display = 'block';
+      form.reset();
+      setTimeout(() => {
+        successMessage.style.display = 'none';
+      }, 5000);
+    } else {
+      alert('Oops! Something went wrong. Please try again.');
+    }
+  } catch (error) {
+    alert('Oops! Something went wrong. Please try again.');
+    console.error(error);
+  }
+});
